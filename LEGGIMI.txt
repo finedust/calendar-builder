@@ -1,0 +1,32 @@
+UniBo Calendar Builder
+
+Questo semplice programma serve per esportare le tue lezioni in un file che
+ potrai successivamente importare nel calendario del tuo dispositivo.
+
+
+Dipendenze: python3, (pip)
+Installazione: python3 -m pip install -r requirements.txt
+Semplice utilizzo: ./main.py -c <codice-corso> -y <anno>
+               es. ./main.py -c 8010 -y 2
+
+In pratica il programma cerca le informazioni tramite la API messa a
+ disposizione da UniBO e crea il calendario in un formato piuttosto universale
+ chiamato icalendar (qui i dettagli: https://en.wikipedia.org/wiki/ICalendar).
+
+
+Importante: Questo progetto è distribuito sotto i termini della licenza MIT.
+Vedi il file LICENSE.txt per i dettagli.
+
+Non ho alcuna affiliazione con UniBo (a parte esserne studente) e il mio lavoro
+ è personale e spontaneo.
+
+
+Probabilmente il codice contiene degli errori, per favore fammi sapere se
+ qualcosa va storto.
+
+Se il mio lavoro ti è stato utile sappi che anche una piccola donazione
+ sarebbe un grande incentivo per continuare a lavorarci.
+IBAN: IT60D0306962692100000090083
+
+
+scritto da Francesco Tosello. Contattami a: francesco.tosello@studio.unibo.it
