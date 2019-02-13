@@ -30,6 +30,7 @@ __VERSION__ = 1
 # 1 Unable to get a list of lectures (curriculum not found, error fetching the list)
 # 2 Malformed data
 # 3 Can't export to file
+# 4 User didn't confirm the operation
 ###
 
 
@@ -37,6 +38,7 @@ __VERSION__ = 1
 from api_constants import *
 from argparse import ArgumentParser
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 from json import loads as parse_json, dumps as to_json_bytes
 from datetime import datetime, timedelta, timezone
 from re import sub
@@ -81,19 +83,23 @@ def fetch_json(resource, filters = {}, fields = [], limit = 40):
 	if fields: req_payload[FIELDS_PARAMETER] = fields
 	r = Request(DATA_QUERY_URL, headers = {'Content-Type': 'application/json'}, \
 		data = to_json_bytes(req_payload).encode())
-	with urlopen(r) as response:
-		if response.code is not 200:
-			print("Bad response code: {}".format(response.code))
-			return []
-		json = parse_json(response.read())
-		if json['success'] is not True:
-			print("An error occurred: {}".format(json['error']['message']))
-			return []
-		if 'total' in json['result'] and int(json['result']['total']) > 0:
-			return json['result']['records']
-		else:
-			print("No results found.")
-			return []
+	try:
+		with urlopen(r) as response:
+			if response.code is not 200:
+				print("Bad response code: {}".format(response.code))
+				return []
+			json = parse_json(response.read())
+			if json['success'] is not True:
+				print("An error occurred: {}".format(json['error']['message']))
+				return []
+			if 'total' in json['result'] and int(json['result']['total']) > 0:
+				return json['result']['records']
+			else:
+				print("No results found.")
+				exit(1)
+	except HTTPError as httpe:
+		print(httpe)
+		exit(1)
 
 def fetch_curricula(code):
 	'''
@@ -105,7 +111,8 @@ def fetch_curricula(code):
 
 def fetch_teachings(curriculum, year = 0, teachings = [], inactive = False):
 	'''
-	This functions returns a list of teachings (dictionary)
+	This functions returns a list of teachings (dictionary).
+	If no teaching is found then exit with a message.
 	'''
 	filters = {FIELD_CURRICULUM_CODE: str(curriculum)}
 	if not teachings and year > 0:
@@ -115,14 +122,28 @@ def fetch_teachings(curriculum, year = 0, teachings = [], inactive = False):
 		tlist = fetch_json(RESOURCE_CURRICULA_DETAILS, filters, limit = NO_LIMIT_VALUE)
 		filtered_list = []
 		for t in tlist:
-			if t[FIELD_CURRICULUM_YEAR] == year:
+			if not t[FIELD_CURRICULUM_TEACHING_ID]: continue # skip this
+			if t[FIELD_CURRICULUM_YEAR] == year: # if the year is not specified no course will be added
 				filtered_list.append(t)
 			else: # do not add it twice
 				for tin in teachings:
-					if type(tin) == int and t[FIELD_CURRICULUM_TEACHING_ID] == tin:
-						filtered_list.append(t)
-						break
-					elif type(tin) == str and tin.lower() in t[FIELD_CURRICULUM_SUBJECT_DESCRIPTION].lower():
+					try:
+						cid = int(tin)
+						if int(t[FIELD_CURRICULUM_TEACHING_ID]) == cid:
+							filtered_list.append(t)
+							break
+					except ValueError:
+						if type(tin) == str and tin.lower() in t[FIELD_CURRICULUM_SUBJECT_DESCRIPTION].lower():
+							filtered_list.append(t)
+							break
+		if not filtered_list: # try with a rougher search
+			for t in tlist:
+				if not t[FIELD_CURRICULUM_TEACHING_ID]: continue # skip this
+				for tin in teachings:
+					if type(tin) is not str: continue # we don't need course ids
+					if all([ \
+						bool( x in t[FIELD_CURRICULUM_SUBJECT_DESCRIPTION].lower() ) for x in tin.lower().split() \
+						]):
 						filtered_list.append(t)
 						break
 	if not inactive and filtered_list:
@@ -130,7 +151,11 @@ def fetch_teachings(curriculum, year = 0, teachings = [], inactive = False):
 		for t in filtered_list:
 			if t[FIELD_CURRICULUM_ACTIVE]: filtered_list_2.append(t)
 		filtered_list = filtered_list_2
-	return filtered_list
+	if filtered_list:
+		return filtered_list
+	else:
+		print("No teching has been found with your filters, please check your request.")
+		exit(0) # it is not really an error
 
 def fetch_courses(teachings, fork_regex = None):
 	'''
@@ -275,7 +300,8 @@ def export_calendar(courses, timetables, filename):
 			exit(2)
 		e = Event()
 		e.name = sub(SUBJECT_REGEX, '', course[FIELD_TEACHING_SUBJECT_DESCRIPTION].capitalize())
-		if course[FIELD_TEACHING_TEACHER_NAME]: e.description = "Tenuto da {}".format(course[FIELD_TEACHING_TEACHER_NAME])
+		if course[FIELD_TEACHING_TEACHER_NAME]:
+			e.description = "Tenuto da {}".format(course[FIELD_TEACHING_TEACHER_NAME].title())
 		e.begin = lecture[LECTURE_START].astimezone(timezone.utc)
 		e.end = lecture[LECTURE_END].astimezone(timezone.utc)
 		e.created = datetime.now().astimezone(timezone.utc)
@@ -292,13 +318,34 @@ def export_calendar(courses, timetables, filename):
 		print("Unable to export the calendar to file: {}".format(ioe))
 		exit(3)
 
+def ask_for_confirmation(description = ""):
+	'''
+	Ask the user to confirm the output.
+	'''
+	if not quiet:
+		repl = input(description)
+		if repl and (repl is not 'y') and (repl is not "yes"):
+			print("Ok, I quit.")
+			exit(4)
+
 def main(curriculum, year = 0, teachings = [], fork_regex = None, inactive = False, \
 	start = DEFAULT_START_DATE, end = DEFAULT_END_DATE, filename = DEFAULT_FILENAME, coordinates = False):
 	teachings = fetch_teachings(curriculum, year, teachings, inactive)
+	if verbose or not quiet:
+		print("I found {:d} teaching(s):".format(len(teachings)))
+		for t in teachings: print(t)
+	ask_for_confirmation("Do you confirm the teachings list? (y/n)  ")
 	courses = fetch_courses(teachings, fork_regex)
+	if verbose or not quiet:
+		print("So this is the list of your course(s) ({:d}):".format(len(courses)))
+		for c in courses: print(c)
+	ask_for_confirmation("Do you confirm the courses? (y/n)  ")
 	timetables = retrieve_timetables(courses, start, end, coordinates)
+	if verbose or not quiet:
+		print("I got {:d} lessons.".format(len(timetables)))
+	ask_for_confirmation("Should I proceed and export the lessons? (y/n)  ")
 	export_calendar(courses, timetables, filename)
-	print("Done, exported {:d} lessons.".format(len(timetables)))
+	print("Done, exported to {}.".format(filename))
 
 def parse_args():
 	parser = ArgumentParser(description = "Export your lectures in a calendar.", epilog = "written by " + __AUTHOR__)
@@ -317,7 +364,13 @@ def parse_args():
 	parser.add_argument('--to', '--to-date', default = DEFAULT_END_DATE, \
 		help = "End date, format dd-mm-yy. Default approximatively 10 years (aka no end).")
 	parser.add_argument('--coordinates', action = 'store_true', help = "Instead of the address store the gps coordinates.")
+	parser.add_argument('-v', '--verbose', action = 'store_true', help = "Print more information.")
+	parser.add_argument('-q', '--quiet', action = 'store_true', help = "Do not ask for confirmation.")
 	args = parser.parse_args()
+
+	global verbose, quiet
+	verbose = args.verbose
+	quiet = args.quiet
 
 	if not args.curriculum: # inserted the course's code
 		curricula = fetch_curricula(args.code)
