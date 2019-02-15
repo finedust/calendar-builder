@@ -1,7 +1,7 @@
 UniBo Calendar Builder
 
 This is a simple script made to export your lectures to a calendar file that
- could be imported to your phone calendar or everywhere else.
+ could be imported into your phone calendar or everywhere else.
 
 
 Dependencies: python3, (pip)
