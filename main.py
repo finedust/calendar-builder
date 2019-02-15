@@ -154,7 +154,7 @@ def fetch_teachings(curriculum, year = 0, teachings = [], inactive = False):
 	if filtered_list:
 		return filtered_list
 	else:
-		print("No teching has been found with your filters, please check your request.")
+		print("No teaching has been found with your filters, please check your request.")
 		exit(0) # it is not really an error
 
 def fetch_courses(teachings, fork_regex = None):
@@ -351,21 +351,22 @@ def parse_args():
 	parser = ArgumentParser(description = "Export your lectures in a calendar.", epilog = "written by " + __AUTHOR__)
 	curricula_group = parser.add_mutually_exclusive_group(required = True)
 	curricula_group.add_argument('-c', '--code', type = str, help = "This is your course's code (e.g. 8010).") # must be string otherwise the leading zero gets lost
-	curricula_group.add_argument('--curriculum', help = "Insert directly the name of the curriculum.")
+	curricula_group.add_argument('--curriculum', help = "Insert directly the code of the curriculum.")
 	parser.add_argument('-y', '--year', type = int, help = "Select the year of which you want to follow the lessons.")
 	parser.add_argument('-t', '--teaching', dest = 'teachings', action = 'append', required = False, default = [], \
-		help = "Add some other teaching from your curriculum. May be either the subject name or better the teaching id.")
+		help = "Add some extra teaching from your curriculum. \
+		May be either a part of the subject name or better the component id of the teaching.")
 	parser.add_argument('-f', '--file', default = DEFAULT_FILENAME, help = "Export the calendar to this file.")
 	parser.add_argument('--inactive', '--include-inactive', dest = 'inactive', action = 'store_true', \
-		help = "Include also inactive teachings.")
+		help = "Search also for inactive teachings.")
 	parser.add_argument('-fr', '--fork-regex', dest = 'fregex', help = "Match this string when choosing between forked teachings.")
 	parser.add_argument('--from', '--from-date', dest = 'from_date', default = DEFAULT_START_DATE, \
 		help = "Start date, format dd-mm-yy. Default today.")
 	parser.add_argument('--to', '--to-date', default = DEFAULT_END_DATE, \
 		help = "End date, format dd-mm-yy. Default approximatively 10 years (aka no end).")
-	parser.add_argument('--coordinates', action = 'store_true', help = "Instead of the address store the gps coordinates.")
+	parser.add_argument('--coordinates', action = 'store_true', help = "Instead of the address store the gps coordinates of the classroom.")
 	parser.add_argument('-v', '--verbose', action = 'store_true', help = "Print more information.")
-	parser.add_argument('-q', '--quiet', action = 'store_true', help = "Do not ask for confirmation.")
+	parser.add_argument('-q', '--quiet', action = 'store_true', help = "Do not ask for confirmation of operations.")
 	args = parser.parse_args()
 
 	global verbose, quiet
