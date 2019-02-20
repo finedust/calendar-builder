@@ -11,7 +11,7 @@
 ###
 
 __AUTHOR__ = "Francesco Tosello"
-__VERSION__ = 1
+__VERSION__ = 1.1
 
 
 ###
@@ -48,8 +48,8 @@ from ics import Calendar, Event
 NO_LIMIT_VALUE = 10000
 
 DATE_FORMAT = "%d-%m-%y" # format used when parsing dates
-DEFAULT_START_DATE = datetime.now().astimezone().strftime(DATE_FORMAT)
-DEFAULT_END_DATE = (datetime.now().astimezone() + timedelta(3650)).strftime(DATE_FORMAT)
+DEFAULT_START_DATE = datetime.today().astimezone().strftime(DATE_FORMAT)
+DEFAULT_END_DATE = (datetime.today().astimezone() + timedelta(3650)).strftime(DATE_FORMAT)
 START_DATE_DESCRIPTION = "timetables starting date"
 END_DATE_DESCRIPTION = "timetables end date"
 
@@ -123,7 +123,7 @@ def fetch_teachings(curriculum, year = 0, teachings = [], inactive = False):
 		filtered_list = []
 		for t in tlist:
 			if not t[FIELD_CURRICULUM_TEACHING_ID]: continue # skip this
-			if t[FIELD_CURRICULUM_YEAR] == year: # if the year is not specified no course will be added
+			if int(t[FIELD_CURRICULUM_YEAR]) == int(year): # if the year is not specified no course will be added
 				filtered_list.append(t)
 			else: # do not add it twice
 				for tin in teachings:
@@ -228,7 +228,7 @@ def retrieve_timetables(courses, start = DEFAULT_START_DATE, end = DEFAULT_END_D
 		date = None
 		while not date:
 			try:
-				date = datetime.strptime(date_string, DATE_FORMAT)
+				date = datetime.strptime(date_string, DATE_FORMAT).astimezone()
 			except ValueError as ve:
 				date = None
 				date_string = input("Please, insert the {} in this format: dd-mm-yy. Date: ".format(description))
@@ -272,8 +272,8 @@ def retrieve_timetables(courses, start = DEFAULT_START_DATE, end = DEFAULT_END_D
 		Builds a record that will be exported to the calendar starting from a lecture.
 		'''
 		return {LECTURE_COURSE_ID: int(lecture[FIELD_TIMETABLE_TEACHING_ID]), \
-					LECTURE_START: datetime.strptime(str(lecture[FIELD_TIMETABLE_START]), DATETIME_FORMAT), \
-					LECTURE_END: datetime.strptime(str(lecture[FIELD_TIMETABLE_END]), DATETIME_FORMAT), \
+					LECTURE_START: datetime.strptime(str(lecture[FIELD_TIMETABLE_START]), DATETIME_FORMAT).astimezone(), \
+					LECTURE_END: datetime.strptime(str(lecture[FIELD_TIMETABLE_END]), DATETIME_FORMAT).astimezone(), \
 					LECTURE_NOTES: str(lecture[FIELD_TIMETABLE_NOTES]), \
 					LECTURE_LOCATION: build_location(lecture[FIELD_TIMETABLE_ROOM_ID]), \
 					}
@@ -302,9 +302,9 @@ def export_calendar(courses, timetables, filename):
 		e.name = sub(SUBJECT_REGEX, '', course[FIELD_TEACHING_SUBJECT_DESCRIPTION].capitalize())
 		if course[FIELD_TEACHING_TEACHER_NAME]:
 			e.description = "Tenuto da {}".format(course[FIELD_TEACHING_TEACHER_NAME].title())
-		e.begin = lecture[LECTURE_START].astimezone(timezone.utc)
-		e.end = lecture[LECTURE_END].astimezone(timezone.utc)
-		e.created = datetime.now().astimezone(timezone.utc)
+		e.begin = lecture[LECTURE_START]
+		e.end = lecture[LECTURE_END]
+		e.created = datetime.today().astimezone()
 		if lecture[LECTURE_LOCATION]: e.location = lecture[LECTURE_LOCATION]
 		if course[FIELD_TEACHING_URL]: e.url = course[FIELD_TEACHING_URL]
 		return e
