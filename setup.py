@@ -12,7 +12,6 @@ with io.open('./calendariounibo/__init__.py', encoding='utf8') as version_file:
     else:
         raise RuntimeError("Unable to find version string.")
 
-
 with io.open('LEGGIMI.txt', encoding='utf8') as readme:
     long_description = readme.read()
 
@@ -76,3 +75,4 @@ setup(
         },
     }
 )
+

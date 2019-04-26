@@ -25,7 +25,7 @@ Probably this code contains bugs so please let me know if something goes wrong.
 
 If my work result useful to you, consider that even a little donation may be to
  me a great incentive to further develop the code.
-IBAN: IT60D0306962692100000090083
+IBAN: IT40 K030 6936 8961 0000 0003 056		BIC: BCITITMM
 
 
 by Francesco Tosello. Contact me at: francesco.tosello@studio.unibo.it
