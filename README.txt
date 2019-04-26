@@ -3,6 +3,7 @@ UniBo Calendar Builder
 This is a simple script made to export your lectures to a calendar file that
  could be imported into your phone calendar or everywhere else.
 
+Reference GitHub page: https://github.com/finedust/calendar-builder
 
 Dependencies: python3, (pip)
 Installation: python3 -m pip install -r requirements.txt

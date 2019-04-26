@@ -2,16 +2,17 @@
 
 
 ###
-# File: main.py
-# 
+# File: downloader.py
+#
 # Description: Fetches the lectures list from the server API and adds them to an
 #                exportable ics calendar file.
-# 
+#
+# Note: This file may be executed as a standalone script or called inside the app.
+#
 # Author: Francesco Tosello
 ###
 
 __AUTHOR__ = "Francesco Tosello"
-__VERSION__ = 1.1
 
 
 ###
