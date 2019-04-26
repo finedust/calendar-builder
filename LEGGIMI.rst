@@ -3,6 +3,7 @@ UniBo Calendar Builder
 Questo semplice programma serve per esportare le tue lezioni in un file che
  potrai successivamente importare nel calendario del tuo dispositivo.
 
+Indirizzo del progetti su GitHub: https://github.com/finedust/calendar-builder
 
 Dipendenze: python3, (pip)
 Installazione: python3 -m pip install -r requirements.txt
