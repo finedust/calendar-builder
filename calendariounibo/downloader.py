@@ -241,7 +241,13 @@ def retrieve_timetables(courses, start = DEFAULT_START_DATE, end = DEFAULT_END_D
 		{FIELD_TIMETABLE_TEACHING_ID: [str(c[FIELD_TEACHING_ID]) for c in courses] }, \
 		limit = NO_LIMIT_VALUE)
 	room_codes = set([t[FIELD_TIMETABLE_ROOM_ID] for t in timetables if t[FIELD_TIMETABLE_ROOM_ID]])
-	rooms = fetch_json(RESOURCE_ROOMS, {FIELD_ROOMS_ROOM_ID: [y for r in room_codes for y in r.split()]}, \
+	roomslist = [z for r in room_codes for z in r.split()]
+	## Here comes a workaround for Briefcase that doesn't understands multiple list comprehension:
+	#roomslist = []
+	#for r in room_codes:
+	#	roomslist += r.split()
+	##
+	rooms = fetch_json(RESOURCE_ROOMS, {FIELD_ROOMS_ROOM_ID: roomslist}, \
 		limit = len(room_codes))
 	classrooms = {}
 	for r in rooms: classrooms.setdefault(r[FIELD_ROOMS_ROOM_ID], r)
@@ -335,16 +341,16 @@ def main(curriculum, year = 0, teachings = [], fork_regex = None, inactive = Fal
 	if verbose or not quiet:
 		print("I found {:d} teaching(s):".format(len(teachings)))
 		for t in teachings: print(t)
-	ask_for_confirmation("Do you confirm the teachings list? (y/n)  ")
+	ask_for_confirmation("Do you confirm the teachings list? (Y/n)  ")
 	courses = fetch_courses(teachings, fork_regex)
 	if verbose or not quiet:
 		print("So this is the list of your course(s) ({:d}):".format(len(courses)))
 		for c in courses: print(c)
-	ask_for_confirmation("Do you confirm the courses? (y/n)  ")
+	ask_for_confirmation("Do you confirm the courses? (Y/n)  ")
 	timetables = retrieve_timetables(courses, start, end, coordinates)
 	if verbose or not quiet:
 		print("I got {:d} lessons.".format(len(timetables)))
-	ask_for_confirmation("Should I proceed and export the lessons? (y/n)  ")
+	ask_for_confirmation("Should I proceed and export the lessons? (Y/n)  ")
 	export_calendar(courses, timetables, filename)
 	print("Done, exported to {}.".format(filename))
 
