@@ -359,7 +359,7 @@ def parse_args():
 	curricula_group = parser.add_mutually_exclusive_group(required = True)
 	curricula_group.add_argument('-c', '--code', type = str, help = "This is your course's code (e.g. 8010).") # must be string otherwise the leading zero gets lost
 	curricula_group.add_argument('--curriculum', help = "Insert directly the code of the curriculum.")
-	parser.add_argument('-y', '--year', type = int, help = "Select the year of which you want to follow the lessons.")
+	parser.add_argument('-y', '--year', type = int, default = 0, help = "Select the year of which you want to follow the lessons.")
 	parser.add_argument('-t', '--teaching', dest = 'teachings', action = 'append', required = False, default = [], \
 		help = "Add some extra teaching from your curriculum. \
 		May be either a part of the subject name or better the component id of the teaching.")
